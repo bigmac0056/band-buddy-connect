@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "../components/Header";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,22 +16,28 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      alert("Пароли не совпадают");
+      setError("Пароли не совпадают");
       return;
     }
     
     setIsLoading(true);
+    setError("");
     
-    // Симуляция регистрации
-    setTimeout(() => {
-      setIsLoading(false);
+    const result = await register(formData.name, formData.email, formData.password);
+    
+    if (result.success) {
       navigate("/dashboard");
-    }, 1000);
+    } else {
+      setError(result.error || "Ошибка регистрации");
+    }
+    
+    setIsLoading(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,6 +143,11 @@ const RegisterPage = () => {
               </div>
             </div>
 
+            {error && (
+              <div className="text-red-500 text-sm text-center bg-red-50 border border-red-200 rounded-lg p-3">
+                {error}
+              </div>
+            )}
             <button
               type="submit"
               disabled={isLoading}

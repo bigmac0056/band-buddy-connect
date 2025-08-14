@@ -1,5 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
+import logo from "../assets/logo.png";
+import { useAuth } from "../hooks/useAuth";
 
 interface HeaderProps {
   showAuth?: boolean;
@@ -8,10 +10,12 @@ interface HeaderProps {
 const Header = ({ showAuth = true }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
   const isDashboard = location.pathname === "/dashboard";
+  const isAdmin = location.pathname === "/admin";
 
   const handleLogout = () => {
-    // В реальном приложении здесь была бы логика выхода
+    logout();
     navigate("/");
   };
 
@@ -20,15 +24,21 @@ const Header = ({ showAuth = true }: HeaderProps) => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Логотип */}
         <div 
-          className="text-2xl font-bold text-primary cursor-pointer"
+          className="flex items-center gap-2 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          BandUp
+          <img src={logo} alt="Логотип" className="w-9 h-9" />
+          <span className="text-2xl font-bold text-primary">Band<span className="font-bold text-foreground">Up</span></span>
         </div>
 
         {/* Навигация */}
+        <nav className="hidden md:flex items-center gap-6">
+          
+        </nav>
+
+        {/* Навигация */}
         <div className="flex items-center gap-4">
-          {showAuth && !isDashboard && (
+          {showAuth && !user && (
             <>
               <button
                 onClick={() => navigate("/login")}
@@ -45,14 +55,23 @@ const Header = ({ showAuth = true }: HeaderProps) => {
             </>
           )}
           
-          {isDashboard && (
-            <button
-              onClick={handleLogout}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <LogOut size={18} />
-              Выход
-            </button>
+          {user && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate("/profile")}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <User size={16} />
+                <span>{user.name}</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="btn-secondary flex items-center gap-2"
+              >
+                <LogOut size={18} />
+                Выход
+              </button>
+            </div>
           )}
         </div>
       </div>

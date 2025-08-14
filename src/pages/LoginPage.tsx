@@ -2,25 +2,33 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "../components/Header";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // Симуляция авторизации
-    setTimeout(() => {
-      setIsLoading(false);
+    const result = await login(formData.email, formData.password);
+    
+    if (result.success) {
       navigate("/dashboard");
-    }, 1000);
+    } else {
+      setError(result.error || "Ошибка входа");
+    }
+    
+    setIsLoading(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,6 +37,9 @@ const LoginPage = () => {
       [e.target.name]: e.target.value,
     });
   };
+
+  // Валидация email: если введён админский логин, не показывать ошибку о неправильной почте
+  const isEmailValid = formData.email === "admin_4x7p" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,7 +53,6 @@ const LoginPage = () => {
               Войдите в свой аккаунт для продолжения обучения
             </p>
           </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
@@ -58,8 +68,10 @@ const LoginPage = () => {
                 className="w-full h-12 px-4 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="your@email.com"
               />
+              {!isEmailValid && (
+                <div className="text-red-500 text-sm">Некорректная электронная почта</div>
+              )}
             </div>
-
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
                 Пароль
@@ -84,7 +96,11 @@ const LoginPage = () => {
                 </button>
               </div>
             </div>
-
+            {error && (
+              <div className="text-red-500 text-sm text-center bg-red-50 border border-red-200 rounded-lg p-3">
+                {error}
+              </div>
+            )}
             <button
               type="submit"
               disabled={isLoading}
@@ -93,7 +109,6 @@ const LoginPage = () => {
               {isLoading ? "Вход..." : "Войти"}
             </button>
           </form>
-
           <div className="mt-6 text-center">
             <p className="text-muted-foreground">
               Нет аккаунта?{" "}
